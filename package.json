@@ -7,7 +7,7 @@
   "scripts": {
     "pretest": "eslint --fix --format=codeframe index.js test.js",
     "test": "node --throw-deprecation --track-heap-objects test.js",
-    "coverage": "istanbul cover  --print=both test.js"
+    "coverage": "istanbul cover --print=both test.js"
   },
   "license": "MIT",
   "files": [
@@ -31,7 +31,6 @@
     "is-plain-obj": "^1.1.0",
     "is-utf8": "^0.2.1",
     "object-assign": "^4.1.0",
-    "pinkie-promise": "^2.0.1",
     "strip-bom": "^2.0.0"
   },
   "devDependencies": {
