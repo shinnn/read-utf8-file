@@ -70,7 +70,7 @@ test('readUtf8File()', t => {
   readUtf8File(__filename, {flag: new Map()}).then(t.fail, err => {
     t.strictEqual(
       err.message,
-      '`flag` option must be valid file open flag, for example \'r\' & \'ax+\', but got Map {}.',
+      '`flag` option must be valid file open flag (string), for example \'r\' & \'ax+\', but got Map {}.',
       'should fail when it takes non-string `flag` option.'
     );
   });

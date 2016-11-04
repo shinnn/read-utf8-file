@@ -12,7 +12,7 @@ var isUtf8 = require('is-utf8');
 var stripBom = require('strip-bom');
 
 var PATH_ERROR = 'Expected a file path (string) to read its contents';
-var FLAG_ERROR = '`flag` option must be valid file open flag, for example \'r\' & \'ax+\'';
+var FLAG_ERROR = '`flag` option must be valid file open flag (string), for example \'r\' & \'ax+\'';
 
 module.exports = function readUtf8File(filePath, options) {
   if (typeof filePath !== 'string') {
@@ -55,7 +55,7 @@ module.exports = function readUtf8File(filePath, options) {
     if (options.flag && typeOfFlag !== 'string' && typeOfFlag !== 'number') {
       return Promise.reject(new TypeError(FLAG_ERROR + ', but got ' + inspect(options.flag) + '.'));
     } else if (options.flag === '') {
-      return Promise.reject(new Error(FLAG_ERROR + ', but got \'\' (empty string).'));
+      return Promise.reject(new Error(FLAG_ERROR.replace(' (string)', '') + ', but got \'\' (empty string).'));
     }
   }
 
