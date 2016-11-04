@@ -1,3 +1,5 @@
+﻿/* eslint unicode-bom: [error, always] */
+// NOTE: this file explicitly includes BOM for testing purpose.
 'use strict';
 
 const path = require('path');
@@ -12,8 +14,8 @@ test('readUtf8File()', t => {
     t.strictEqual(str, 'coverage\nnode_modules\n', 'should read a UTF-8 file.');
   }).catch(t.fail);
 
-  readUtf8File(path.resolve('.gitignore'), {}).then(str => {
-    t.strictEqual(str, 'coverage\nnode_modules\n', 'should support relative path.');
+  readUtf8File('test.js', {}).then(str => {
+    t.strictEqual(str.charAt(0), '/', 'should strip BOM.');
   }).catch(t.fail);
 
   const nonUtf8Path = path.resolve('.git/objects/0f/f7b940c1d9ada0760194c1145d9f92458caa25');
