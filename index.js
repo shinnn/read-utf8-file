@@ -4,31 +4,23 @@
 */
 'use strict';
 
-var inspect = require('util').inspect;
+const inspect = require('util').inspect;
 
-var fs = require('graceful-fs');
-var isPlainObj = require('is-plain-obj');
-var isUtf8 = require('is-utf8');
-var stripBom = require('strip-bom');
+const fs = require('graceful-fs');
+const isPlainObj = require('is-plain-obj');
+const isUtf8 = require('is-utf8');
+const stripBom = require('strip-bom');
 
-var PATH_ERROR = 'Expected a file path (string) to read its contents';
-var FLAG_ERROR = '`flag` option must be valid file open flag (string), for example \'r\' & \'ax+\'';
+const PATH_ERROR = 'Expected a file path (string) to read its contents';
+const FLAG_ERROR = '`flag` option must be valid file open flag (string), for example \'r\' & \'ax+\'';
 
 module.exports = function readUtf8File(filePath, options) {
   if (typeof filePath !== 'string') {
-    return Promise.reject(new TypeError(
-      PATH_ERROR +
-      ', but got ' +
-      inspect(filePath) +
-      '.'
-    ));
+    return Promise.reject(new TypeError(`${PATH_ERROR}, but got ${inspect(filePath)}.`));
   }
 
   if (filePath.length === 0) {
-    return Promise.reject(new Error(
-      PATH_ERROR.replace(' (string)', '') +
-      ', but got \'\' (empty string).'
-    ));
+    return Promise.reject(new TypeError(`${PATH_ERROR.replace(' (string)', '')}, but got '' (empty string).`));
   }
 
   if (options) {
@@ -50,12 +42,12 @@ module.exports = function readUtf8File(filePath, options) {
       ));
     }
 
-    var typeOfFlag = typeof options.flag;
+    const typeOfFlag = typeof options.flag;
 
     if (options.flag && typeOfFlag !== 'string' && typeOfFlag !== 'number') {
-      return Promise.reject(new TypeError(FLAG_ERROR + ', but got ' + inspect(options.flag) + '.'));
+      return Promise.reject(new TypeError(`${FLAG_ERROR}, but got ${inspect(options.flag)}.`));
     } else if (options.flag === '') {
-      return Promise.reject(new Error(FLAG_ERROR.replace(' (string)', '') + ', but got \'\' (empty string).'));
+      return Promise.reject(new Error(`${FLAG_ERROR.replace(' (string)', '')}, but got '' (empty string).`));
     }
   }
 
@@ -67,11 +59,7 @@ module.exports = function readUtf8File(filePath, options) {
       }
 
       if (!isUtf8(content)) {
-        reject(new Error(
-          'Expected a UTF-8 file, but the file at ' +
-          inspect(filePath) +
-          ' is not UTF-8 encoded.'
-        ));
+        reject(new Error(`Expected a UTF-8 file, but the file at ${inspect(filePath)} is not UTF-8 encoded.`));
       }
 
       resolve(stripBom(content.toString()));

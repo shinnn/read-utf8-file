@@ -31,15 +31,15 @@
     "is-plain-obj": "^1.1.0",
     "is-utf8": "^0.2.1",
     "object-assign": "^4.1.0",
-    "strip-bom": "^2.0.0"
+    "strip-bom": "^3.0.0"
   },
   "devDependencies": {
-    "@shinnn/eslint-config-node-legacy": "^3.0.0",
+    "@shinnn/eslint-config-node": "^3.0.0",
     "eslint": "^3.9.1",
     "istanbul": "^0.4.5",
     "tape": "^4.6.2"
   },
   "eslintConfig": {
-    "extends": "@shinnn/node-legacy"
+    "extends": "@shinnn/node"
   }
 }
