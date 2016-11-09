@@ -1,6 +1,6 @@
 {
   "name": "read-utf8-file",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Read the contents of a UTF-8 file",
   "repository": "shinnn/read-utf8-file",
   "author": "Shinnosuke Watanabe (https://github.com/shinnn)",
