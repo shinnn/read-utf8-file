@@ -4,11 +4,11 @@
 */
 'use strict';
 
-const inspect = require('util').inspect;
+const {inspect} = require('util');
 
-const fs = require('graceful-fs');
 const isPlainObj = require('is-plain-obj');
 const isUtf8 = require('is-utf8');
+const {readFile} = require('graceful-fs');
 const stripBom = require('strip-bom');
 
 const PATH_ERROR = 'Expected a file path (string) to read its contents';
@@ -52,7 +52,7 @@ module.exports = function readUtf8File(filePath, options) {
   }
 
   return new Promise((resolve, reject) => {
-    fs.readFile(filePath, options, (err, content) => {
+    readFile(filePath, options, (err, content) => {
       if (err) {
         reject(err);
         return;
