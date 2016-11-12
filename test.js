@@ -8,7 +8,7 @@ const readUtf8File = require('.');
 const test = require('tape');
 
 test('readUtf8File()', t => {
-  t.plan(11);
+  t.plan(13);
 
   readUtf8File(path.resolve('.gitignore')).then(str => {
     t.strictEqual(str, 'coverage\nnode_modules\n', 'should read a UTF-8 file.');
@@ -33,6 +33,22 @@ test('readUtf8File()', t => {
       err.message,
       'ENOENT: no such file or directory, open \'__this_file_does_not_exist__\'',
       'should fail when it cannot read the file.'
+    );
+  });
+
+  readUtf8File().then(t.fail, err => {
+    t.strictEqual(
+      err.message,
+      'Expected 1 or 2 arguments (string[, object]), but got no arguments.',
+      'should fail when it takes no arguments.'
+    );
+  });
+
+  readUtf8File('received', {three: 'args'}, '😢').then(t.fail, err => {
+    t.strictEqual(
+      err.message,
+      'Expected 1 or 2 arguments (string[, object]), but got 3 arguments.',
+      'should fail when it takes more than 2 arguments.'
     );
   });
 

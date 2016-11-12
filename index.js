@@ -14,7 +14,17 @@ const stripBom = require('strip-bom');
 const PATH_ERROR = 'Expected a file path (string) to read its contents';
 const FLAG_ERROR = '`flag` option must be valid file open flag (string), for example \'r\' & \'ax+\'';
 
-module.exports = function readUtf8File(filePath, options) {
+module.exports = function readUtf8File(...args) {
+  const argLen = args.length;
+
+  if (argLen !== 1 && argLen !== 2) {
+    return Promise.reject(new RangeError(`Expected 1 or 2 arguments (string[, object]), but got ${
+      argLen === 0 ? 'no' : argLen
+    } arguments.`));
+  }
+
+  const filePath = args[0];
+
   if (typeof filePath !== 'string') {
     return Promise.reject(new TypeError(`${PATH_ERROR}, but got ${inspect(filePath)}.`));
   }
@@ -22,6 +32,8 @@ module.exports = function readUtf8File(filePath, options) {
   if (filePath.length === 0) {
     return Promise.reject(new TypeError(`${PATH_ERROR.replace(' (string)', '')}, but got '' (empty string).`));
   }
+
+  const options = args[1];
 
   if (options) {
     if (!isPlainObj(options)) {
