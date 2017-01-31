@@ -2,9 +2,7 @@
 
 [![NPM version](https://img.shields.io/npm/v/read-utf8-file.svg)](https://www.npmjs.com/package/read-utf8-file)
 [![Build Status](https://travis-ci.org/shinnn/read-utf8-file.svg?branch=master)](https://travis-ci.org/shinnn/read-utf8-file)
-[![Coverage Status](https://img.shields.io/coveralls/shinnn/read-utf8-file.svg)](https://coveralls.io/github/shinnn/is-gist-starred?branch=master)
-[![dependencies Status](https://david-dm.org/shinnn/read-utf8-file/status.svg)](https://david-dm.org/shinnn/read-utf8-file)
-[![devDependencies Status](https://david-dm.org/shinnn/read-utf8-file/dev-status.svg)](https://david-dm.org/shinnn/read-utf8-file?type=dev)
+[![Coverage Status](https://img.shields.io/coveralls/shinnn/read-utf8-file.svg)](https://coveralls.io/github/shinnn/read-utf8-file?branch=master)
 
 A [Node](https://nodejs.org/) module to read the contents of a UTF-8 file
 
