@@ -28,6 +28,7 @@
   ],
   "dependencies": {
     "graceful-fs": "^4.1.9",
+    "inspect-with-kind": "^1.0.0",
     "is-plain-obj": "^1.1.0",
     "is-utf8": "^0.2.1",
     "strip-bom": "^3.0.0"

@@ -6,6 +6,7 @@
 
 const {inspect} = require('util');
 
+const inspectWithKind = require('inspect-with-kind');
 const isPlainObj = require('is-plain-obj');
 const isUtf8 = require('is-utf8');
 const {readFile} = require('graceful-fs');
@@ -26,7 +27,7 @@ module.exports = function readUtf8File(...args) {
   const filePath = args[0];
 
   if (typeof filePath !== 'string') {
-    return Promise.reject(new TypeError(`${PATH_ERROR}, but got ${inspect(filePath)}.`));
+    return Promise.reject(new TypeError(`${PATH_ERROR}, but got ${inspectWithKind(filePath)}.`));
   }
 
   if (filePath.length === 0) {
@@ -38,19 +39,17 @@ module.exports = function readUtf8File(...args) {
   if (options) {
     if (!isPlainObj(options)) {
       return Promise.reject(new TypeError(
-        'The second argument of read-utf8-file must be a plain object, ' +
-        'but got ' +
-        inspect(options) +
-        '.'
+        `The second argument of read-utf8-file must be a plain object, but got ${
+          inspectWithKind(options)
+        }.`
       ));
     }
 
     if ('encoding' in options) {
       return Promise.reject(new TypeError(
-        'read-utf8-file does not support `encoding` option' +
-        ' because it only supports UTF-8 by design, but ' +
-        inspect(options.encoding) +
-        ' was provided.'
+        `read-utf8-file does not support \`encoding\` option because it only supports UTF-8 by design, but ${
+          inspect(options.encoding)
+        } was provided.`
       ));
     }
 

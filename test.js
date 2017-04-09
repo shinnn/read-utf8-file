@@ -71,7 +71,7 @@ test('readUtf8File()', t => {
   readUtf8File(__filename, [1, 2, 3]).then(t.fail, err => {
     t.strictEqual(
       err.message,
-      'The second argument of read-utf8-file must be a plain object, but got [ 1, 2, 3 ].',
+      'The second argument of read-utf8-file must be a plain object, but got [ 1, 2, 3 ] (array).',
       'should fail when the second argument is not a plain object.'
     );
   });
