@@ -1,7 +1,3 @@
-/*!
- * read-utf8-file | MIT (c) Shinnosuke Watanabe
- * https://github.com/shinnn/read-utf8-file
-*/
 'use strict';
 
 const {inspect} = require('util');
