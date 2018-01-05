@@ -2,7 +2,7 @@
 // NOTE: this file explicitly includes BOM for testing purpose.
 'use strict';
 
-const {resolve} = require('path');
+const {dirname, join, resolve} = require('path');
 
 const readUtf8File = require('.');
 const test = require('tape');
@@ -22,7 +22,9 @@ test('readUtf8File()', async t => {
 		'should strip BOM.'
 	);
 
-	const nonUtf8Path = resolve('.git/objects/0f/f7b940c1d9ada0760194c1145d9f92458caa25');
+	const nonUtf8Path = join(dirname(require.resolve('istanbul-reports/lib/html', {
+		paths: [require.resolve('nyc')]
+	})), 'assets', 'sort-arrow-sprite.png');
 
 	try {
 		await readUtf8File(nonUtf8Path);
