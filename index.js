@@ -8,7 +8,7 @@ const isUtf8 = require('is-utf8');
 const {readFile} = require('graceful-fs');
 const stripBom = require('strip-bom');
 
-const PATH_ERROR = 'Expected a file path (string) to read its contents';
+const PATH_ERROR = 'Expected a valid file path to read its contents, which must includes at least one character';
 const FLAG_ERROR = '`flag` option must be valid file open flag (string), for example \'r\' & \'ax+\'';
 
 module.exports = function readUtf8File(...args) {
@@ -20,17 +20,15 @@ module.exports = function readUtf8File(...args) {
 		} arguments.`));
 	}
 
-	const filePath = args[0];
+	const [filePath, options] = args;
 
-	if (typeof filePath !== 'string') {
-		return Promise.reject(new TypeError(`${PATH_ERROR}, but got ${inspectWithKind(filePath)}.`));
+	if (filePath === '') {
+		return Promise.reject(new TypeError(`${PATH_ERROR}, but got '' (empty string).`));
 	}
 
-	if (filePath.length === 0) {
-		return Promise.reject(new TypeError(`${PATH_ERROR.replace(' (string)', '')}, but got '' (empty string).`));
+	if (Buffer.isBuffer(filePath) && filePath.length === 0) {
+		return Promise.reject(new TypeError(`${PATH_ERROR}, but got an empty Buffer.`));
 	}
-
-	const options = args[1];
 
 	if (options) {
 		if (!isPlainObj(options)) {

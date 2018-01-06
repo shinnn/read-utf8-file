@@ -8,8 +8,6 @@ const readUtf8File = require('.');
 const test = require('tape');
 
 test('readUtf8File()', async t => {
-	t.plan(13);
-
 	t.equal(
 		await readUtf8File(resolve('.gitignore')),
 		'.nyc_output\ncoverage\nnode_modules\n',
@@ -17,7 +15,7 @@ test('readUtf8File()', async t => {
 	);
 
 	t.equal(
-		(await readUtf8File('test.js', {})).charAt(0),
+		(await readUtf8File(Buffer.from('test.js'), {})).charAt(0),
 		'/',
 		'should strip BOM.'
 	);
@@ -71,7 +69,7 @@ test('readUtf8File()', async t => {
 	} catch ({message}) {
 		t.equal(
 			message,
-			'Expected a file path (string) to read its contents, but got null.',
+			'path must be a string or Buffer',
 			'should fail when the first argument is not a string.'
 		);
 	}
@@ -81,8 +79,18 @@ test('readUtf8File()', async t => {
 	} catch ({message}) {
 		t.equal(
 			message,
-			'Expected a file path to read its contents, but got \'\' (empty string).',
+			'Expected a valid file path to read its contents, which must includes at least one character, but got \'\' (empty string).',
 			'should fail when the path is an empty string.'
+		);
+	}
+
+	try {
+		await readUtf8File(Buffer.alloc(0));
+	} catch ({message}) {
+		t.equal(
+			message,
+			'Expected a valid file path to read its contents, which must includes at least one character, but got an empty Buffer.',
+			'should fail when the path is an empty Buffer.'
 		);
 	}
 

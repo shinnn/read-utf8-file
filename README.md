@@ -31,7 +31,7 @@ const readUtf8File = require('read-utf8-file');
 
 ### readUtf8File(*filePath* [, *options*])
 
-*filePath*: `string` (file path)  
+*filePath*: `string` `Buffer` `URL` (file path) or `integer` (file descriptor)  
 *options*: `Object` ([`fs.readFile`](https://nodejs.org/api/fs.html#fs_fs_readfile_file_options_callback) options except for `encoding`)  
 Return: `Promise<string>` (entire file contents except for [BOM](http://unicode.org/faq/utf_bom.html))
 
