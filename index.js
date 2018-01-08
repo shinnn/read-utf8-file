@@ -10,6 +10,7 @@ const stripBom = require('strip-bom');
 
 const PATH_ERROR = 'Expected a valid file path to read its contents, which must includes at least one character';
 const FLAG_ERROR = '`flag` option must be valid file open flag (string), for example \'r\' & \'ax+\'';
+const FD_ERROR = 'read-utf8-file doesn\'t support reading from FD 0 (stdin), FD 1 (stdout) nor FD 2 (stderr)';
 
 module.exports = function readUtf8File(...args) {
 	const argLen = args.length;
@@ -28,6 +29,10 @@ module.exports = function readUtf8File(...args) {
 
 	if (Buffer.isBuffer(filePath) && filePath.length === 0) {
 		return Promise.reject(new TypeError(`${PATH_ERROR}, but got an empty Buffer.`));
+	}
+
+	if (filePath === 0 || filePath === 1 || filePath === 2) {
+		return Promise.reject(new TypeError(`${FD_ERROR}, but got ${inspectWithKind(filePath)}.`));
 	}
 
 	if (options) {

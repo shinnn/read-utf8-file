@@ -95,6 +95,16 @@ test('readUtf8File()', async t => {
 	}
 
 	try {
+		await readUtf8File(2);
+	} catch ({message}) {
+		t.equal(
+			message,
+			'read-utf8-file doesn\'t support reading from FD 0 (stdin), FD 1 (stdout) nor FD 2 (stderr), but got 2 (number).',
+			'should fail when it takes stdin/stdout/stderr file descriptor.'
+		);
+	}
+
+	try {
 		await readUtf8File(__filename, [1, 2, 3]);
 	} catch ({message}) {
 		t.equal(
