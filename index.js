@@ -1,6 +1,6 @@
 'use strict';
 
-const {inspect} = require('util');
+const {inspect, promisify} = require('util');
 
 const inspectWithKind = require('inspect-with-kind');
 const isPlainObj = require('is-plain-obj');
@@ -11,6 +11,7 @@ const stripBom = require('strip-bom');
 const PATH_ERROR = 'Expected a valid file path to read its contents, which must includes at least one character';
 const FLAG_ERROR = '`flag` option must be valid file open flag (string), for example \'r\' & \'ax+\'';
 const FD_ERROR = 'read-utf8-file doesn\'t support reading from FD 0 (stdin), FD 1 (stdout) nor FD 2 (stderr)';
+const promisifiedReadFile = promisify(readFile);
 
 module.exports = async function readUtf8File(...args) {
 	const argLen = args.length;
@@ -57,18 +58,11 @@ module.exports = async function readUtf8File(...args) {
 		}
 	}
 
-	return new Promise((resolve, reject) => {
-		readFile(filePath, options, (err, content) => {
-			if (err) {
-				reject(err);
-				return;
-			}
+	const contents = await promisifiedReadFile(...args);
 
-			if (!isUtf8(content)) {
-				reject(new Error(`Expected a UTF-8 file, but the file at ${inspect(filePath)} is not UTF-8 encoded.`));
-			}
+	if (!isUtf8(contents)) {
+		throw new Error(`Expected a UTF-8 file, but the file at ${inspect(filePath)} is not UTF-8 encoded.`);
+	}
 
-			resolve(stripBom(content.toString()));
-		});
-	});
+	return stripBom(contents.toString());
 };
