@@ -2,13 +2,13 @@
 	"name": "read-utf8-file",
 	"version": "2.0.0",
 	"description": "Read the contents of a UTF-8 file",
+	"author": "Watanabe Shinnosuke (https://github.com/shinnn)",
 	"repository": "shinnn/read-utf8-file",
-	"author": "Shinnosuke Watanabe (https://github.com/shinnn)",
+	"license": "ISC",
 	"scripts": {
 		"pretest": "eslint .",
-		"test": "nyc --reporter=html --reporter=text node test.js"
+		"test": "coverage test.js"
 	},
-	"license": "ISC",
 	"files": [
 		"index.js"
 	],
@@ -26,19 +26,17 @@
 		"asynchronous"
 	],
 	"dependencies": {
-		"graceful-fs": "^4.1.11",
-		"inspect-with-kind": "^1.0.4",
-		"is-plain-obj": "^1.1.0",
-		"is-utf8": "^0.2.1",
-		"strip-bom": "^3.0.0"
+		"inspect-with-kind": "^1.0.5",
+		"is-plain-obj": "^2.0.0",
+		"is-utf8": "^0.2.1"
 	},
 	"devDependencies": {
-		"@shinnn/eslint-config-node": "^6.0.0",
-		"eslint": "^5.4.0",
-		"nyc": "^12.0.2",
-		"tape": "^4.9.1"
+		"@shinnn/eslint-config": "^6.10.4",
+		"coverage": "^0.3.3",
+		"eslint": "^5.16.0",
+		"testit": "^3.1.0"
 	},
 	"eslintConfig": {
-		"extends": "@shinnn/node"
+		"extends": "@shinnn"
 	}
 }

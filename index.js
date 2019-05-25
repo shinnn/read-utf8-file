@@ -1,12 +1,11 @@
 'use strict';
 
 const {inspect, promisify} = require('util');
+const {readFile} = require('fs');
 
 const inspectWithKind = require('inspect-with-kind');
 const isPlainObj = require('is-plain-obj');
 const isUtf8 = require('is-utf8');
-const {readFile} = require('graceful-fs');
-const stripBom = require('strip-bom');
 
 const PATH_ERROR = 'Expected a valid file path to read its contents, which must includes at least one character';
 const FLAG_ERROR = '`flag` option must be valid file open flag (string), for example \'r\' & \'ax+\'';
@@ -58,11 +57,16 @@ module.exports = async function readUtf8File(...args) {
 		}
 	}
 
-	const contents = await promisifiedReadFile(...args);
+	const buffer = await promisifiedReadFile(...args);
 
-	if (!isUtf8(contents)) {
+	if (!isUtf8(buffer)) {
 		throw new Error(`Expected a UTF-8 file, but the file at ${inspect(filePath)} is not UTF-8 encoded.`);
 	}
 
-	return stripBom(contents.toString());
+	// https://www.unicode.org/faq/utf_bom.html#bom4
+	if (buffer[0] === 0xEF && buffer[1] === 0xBB && buffer[2] === 0xBF) {
+		return buffer.slice(3).toString();
+	}
+
+	return buffer.toString();
 };

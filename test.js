@@ -2,125 +2,103 @@
 // NOTE: this file explicitly includes BOM for testing purpose.
 'use strict';
 
-const {dirname, join, resolve} = require('path');
+const {join} = require('path');
+const {equal, rejects} = require('assert').strict;
 
 const readUtf8File = require('.');
-const test = require('tape');
+const test = require('testit');
 
-test('readUtf8File()', async t => {
-	t.equal(
-		await readUtf8File(resolve('.gitignore')),
-		'.nyc_output\ncoverage\nnode_modules\n',
-		'should read a UTF-8 file.'
-	);
-
-	t.equal(
-		(await readUtf8File(Buffer.from('test.js'), {})).charAt(0),
-		'/',
-		'should strip BOM.'
-	);
-
-	const nonUtf8Path = join(dirname(require.resolve('istanbul-reports/lib/html', {
-		paths: [require.resolve('nyc')]
-	})), 'assets', 'sort-arrow-sprite.png');
-
-	try {
-		await readUtf8File(nonUtf8Path);
-	} catch ({message}) {
-		t.equal(
-			message,
-			`Expected a UTF-8 file, but the file at '${nonUtf8Path}' is not UTF-8 encoded.`,
-			'should fail when the file is not UTF-8 encoded.'
-		);
-	}
-
-	try {
-		await readUtf8File('__this_file_does_not_exist__', {});
-	} catch ({code}) {
-		t.equal(
-			code,
-			'ENOENT',
-			'should fail when it cannot read the file.'
-		);
-	}
-
-	t.end();
+test('read a UTF-8 file', async () => {
+	equal(await readUtf8File(join(__dirname, '.gitignore')), 'coverage\nnode_modules\n');
 });
 
-test('Argument validation', async t => {
-	async function getError(...args) {
-		try {
-			return await readUtf8File(...args);
-		} catch (err) {
-			return err;
-		}
-	}
+test('should strip BOM', async () => {
+	equal((await readUtf8File(Buffer.from('test.js'), {})).charAt(0), '/');
+});
 
-	t.equal(
-		(await getError()).message,
-		'Expected 1 or 2 arguments (string[, object]), but got no arguments.',
-		'should fail when it takes no arguments.'
-	);
+test('fail when the file is not UTF-8 encoded', async () => {
+	/* eslint-disable node/no-extraneous-require */
+	const nonUtf8FilePath = require.resolve('istanbul-reports/lib/html/assets/sort-arrow-sprite.png');
+	/* eslint-enable node/no-extraneous-require */
 
-	t.equal(
-		(await getError('received', {three: 'args'}, '😢')).message,
-		'Expected 1 or 2 arguments (string[, object]), but got 3 arguments.',
-		'should fail when it takes more than 2 arguments.'
-	);
+	equal((await readUtf8File(Buffer.from('test.js'), {})).charAt(0), '/');
+	await rejects(async () => readUtf8File(nonUtf8FilePath), {
+		message: `Expected a UTF-8 file, but the file at '${nonUtf8FilePath}' is not UTF-8 encoded.`
+	});
+});
 
-	t.equal(
-		(await getError(null)).code,
-		'ERR_INVALID_ARG_TYPE',
-		'should fail when the first argument is not a string.'
-	);
+test('fail when it cannot read a file', async () => {
+	await rejects(async () => readUtf8File('__this_file_does_not_exist__', {}), {code: 'ENOENT'});
+});
 
-	t.equal(
-		(await getError('')).message,
-		'Expected a valid file path to read its contents, which must includes at least one character, but got \'\' (empty string).',
-		'should fail when the path is an empty string.'
-	);
+test('fail when the first argument is not a string', async () => {
+	await rejects(async () => readUtf8File(null), {
+		name: 'TypeError',
+		code: 'ERR_INVALID_ARG_TYPE'
+	});
+});
 
-	t.equal(
-		(await getError(Buffer.alloc(0))).message,
-		'Expected a valid file path to read its contents, which must includes at least one character, but got an empty Buffer.',
-		'should fail when the path is an empty Buffer.'
-	);
+test('fail when the path is an empty string', async () => {
+	await rejects(async () => readUtf8File(''), {
+		message: 'Expected a valid file path to read its contents, which must includes at least one character, but got \'\' (empty string).'
+	});
+});
 
-	t.equal(
-		(await getError(2)).message,
-		'read-utf8-file doesn\'t support reading from FD 0 (stdin), FD 1 (stdout) nor FD 2 (stderr), but got 2 (number).',
-		'should fail when it takes stdin/stdout/stderr file descriptor.'
-	);
+test('fail when the path is an empty Buffer', async () => {
+	await rejects(async () => readUtf8File(Buffer.alloc(0)), {
+		message: 'Expected a valid file path to read its contents, which must includes at least one character, but got an empty Buffer.'
+	});
+});
 
-	t.equal(
-		(await getError(__filename, [1, 2, 3])).message,
-		'The second argument of read-utf8-file must be a plain object, but got [ 1, 2, 3 ] (array).',
-		'should fail when the second argument is not a plain object.'
-	);
+test('fail when it takes stdin/stdout/stderr file descriptor', async () => {
+	await rejects(async () => readUtf8File(2), {
+		message: 'read-utf8-file doesn\'t support reading from FD 0 (stdin), FD 1 (stdout) nor FD 2 (stderr), but got 2 (number).'
+	});
+});
 
-	t.equal(
-		(await getError(__filename, {encoding: 'hex'})).message,
-		'read-utf8-file does not support `encoding` option because it only supports UTF-8 by design, but \'hex\' was provided.',
-		'should fail when it takes `encoding` option.'
-	);
+test('fail when the second argument is not a plain Object', async () => {
+	await rejects(async () => readUtf8File(__filename, [1, 2, 3]), {
+		name: 'TypeError',
+		message: 'The second argument of read-utf8-file must be a plain object, but got [ 1, 2, 3 ] (array).'
+	});
+});
 
-	t.equal(
-		(await getError(__filename, {flag: new Map()})).message,
-		'`flag` option must be valid file open flag (string), for example \'r\' & \'ax+\', but got Map {}.',
-		'should fail when it takes non-string `flag` option.'
-	);
+test('fail when it takes `encoding` option', async () => {
+	await rejects(async () => readUtf8File(__filename, {encoding: 'hex'}), {
+		name: 'TypeError',
+		message: 'read-utf8-file does not support `encoding` option because it only supports UTF-8 by design, but \'hex\' was provided.'
+	});
+});
 
-	t.equal(
-		(await getError(__filename, {flag: ''})).message,
-		'`flag` option must be valid file open flag, for example \'r\' & \'ax+\', but got \'\' (empty string).',
-		'should fail when `flag` option is an empty string.'
-	);
+test('fail when it takes non-string `flag` option', async () => {
+	await rejects(async () => readUtf8File(__filename, {flag: new Map()}), {
+		name: 'TypeError',
+		message: '`flag` option must be valid file open flag (string), for example \'r\' & \'ax+\', but got Map {}.'
+	});
+});
 
-	t.equal(
-		(await getError(__filename, {flag: '???'})).code,
-		'ERR_INVALID_OPT_VALUE',
-		'should fail when it takes invalid `flag` option.'
-	);
+test('fail when `flag` option is an empty string', async () => {
+	await rejects(async () => readUtf8File(__filename, {flag: ''}), {
+		message: '`flag` option must be valid file open flag, for example \'r\' & \'ax+\', but got \'\' (empty string).'
+	});
+});
 
-	t.end();
+test('fail when it takes invalid `flag` option', async () => {
+	await rejects(async () => readUtf8File(__filename, {flag: '???'}), {
+		code: 'ERR_INVALID_OPT_VALUE'
+	});
+});
+
+test('fail when it takes no arguments', async () => {
+	await rejects(async () => readUtf8File(), {
+		name: 'RangeError',
+		message: 'Expected 1 or 2 arguments (string[, object]), but got no arguments.'
+	});
+});
+
+test('fail when it takes more than 2 arguments', async () => {
+	await rejects(async () => readUtf8File('!', {}, '!'), {
+		name: 'RangeError',
+		message: 'Expected 1 or 2 arguments (string[, object]), but got 3 arguments.'
+	});
 });
