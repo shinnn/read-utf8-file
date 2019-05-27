@@ -23,6 +23,7 @@ test('fail when the file is not UTF-8 encoded', async () => {
 
 	equal((await readUtf8File(Buffer.from('test.js'), {})).charAt(0), '/');
 	await rejects(async () => readUtf8File(nonUtf8FilePath), {
+		code: 'ERR_UNSUPPORTED_FILE_ENCODING',
 		message: `Expected a UTF-8 file, but the file at '${nonUtf8FilePath}' is not UTF-8 encoded.`
 	});
 });
@@ -40,18 +41,28 @@ test('fail when the first argument is not a string', async () => {
 
 test('fail when the path is an empty string', async () => {
 	await rejects(async () => readUtf8File(''), {
+		code: 'ERR_INVALID_ARG_VALUE',
 		message: 'Expected a valid file path to read its contents, which must includes at least one character, but got \'\' (empty string).'
 	});
 });
 
 test('fail when the path is an empty Buffer', async () => {
 	await rejects(async () => readUtf8File(Buffer.alloc(0)), {
+		code: 'ERR_INVALID_ARG_VALUE',
 		message: 'Expected a valid file path to read its contents, which must includes at least one character, but got an empty Buffer.'
+	});
+});
+
+test('fail when the path is an empty Uint8Array', async () => {
+	await rejects(async () => readUtf8File(new Uint8Array()), {
+		code: 'ERR_INVALID_ARG_VALUE',
+		message: 'Expected a valid file path to read its contents, which must includes at least one character, but got an empty Uint8Array.'
 	});
 });
 
 test('fail when it takes stdin/stdout/stderr file descriptor', async () => {
 	await rejects(async () => readUtf8File(2), {
+		code: 'ERR_INVALID_ARG_VALUE',
 		message: 'read-utf8-file doesn\'t support reading from FD 0 (stdin), FD 1 (stdout) nor FD 2 (stderr), but got 2 (number).'
 	});
 });
@@ -73,13 +84,13 @@ test('fail when it takes `encoding` option', async () => {
 test('fail when it takes non-string `flag` option', async () => {
 	await rejects(async () => readUtf8File(__filename, {flag: new Map()}), {
 		name: 'TypeError',
-		message: '`flag` option must be valid file open flag (string), for example \'r\' & \'ax+\', but got Map {}.'
+		message: '`flag` option must be valid file open flags (<string|integer>), but got Map {}.'
 	});
 });
 
 test('fail when `flag` option is an empty string', async () => {
 	await rejects(async () => readUtf8File(__filename, {flag: ''}), {
-		message: '`flag` option must be valid file open flag, for example \'r\' & \'ax+\', but got \'\' (empty string).'
+		message: '`flag` option must be valid file open flags (<string|integer>), but got \'\' (empty string).'
 	});
 });
 
@@ -92,13 +103,13 @@ test('fail when it takes invalid `flag` option', async () => {
 test('fail when it takes no arguments', async () => {
 	await rejects(async () => readUtf8File(), {
 		name: 'RangeError',
-		message: 'Expected 1 or 2 arguments (string[, object]), but got no arguments.'
+		message: 'Expected 1 or 2 arguments (<string|Buffer|Uint8Array|URL|integer>[, <Object>]), but got no arguments.'
 	});
 });
 
 test('fail when it takes more than 2 arguments', async () => {
 	await rejects(async () => readUtf8File('!', {}, '!'), {
 		name: 'RangeError',
-		message: 'Expected 1 or 2 arguments (string[, object]), but got 3 arguments.'
+		message: 'Expected 1 or 2 arguments (<string|Buffer|Uint8Array|URL|integer>[, <Object>]), but got 3 arguments.'
 	});
 });

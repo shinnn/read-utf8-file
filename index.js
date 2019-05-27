@@ -7,39 +7,61 @@ const inspectWithKind = require('inspect-with-kind');
 const isPlainObj = require('is-plain-obj');
 const isUtf8 = require('is-utf8');
 
+const ARG_ERROR = 'Expected 1 or 2 arguments (<string|Buffer|Uint8Array|URL|integer>[, <Object>])';
 const PATH_ERROR = 'Expected a valid file path to read its contents, which must includes at least one character';
-const FLAG_ERROR = '`flag` option must be valid file open flag (string), for example \'r\' & \'ax+\'';
+const FLAG_ERROR = '`flag` option must be valid file open flags (<string|integer>)';
 const FD_ERROR = 'read-utf8-file doesn\'t support reading from FD 0 (stdin), FD 1 (stdout) nor FD 2 (stderr)';
 const promisifiedReadFile = promisify(readFile);
 
 module.exports = async function readUtf8File(...args) {
 	const argLen = args.length;
 
-	if (argLen !== 1 && argLen !== 2) {
-		throw new RangeError(`Expected 1 or 2 arguments (string[, object]), but got ${
-			argLen === 0 ? 'no' : argLen
-		} arguments.`);
+	if (argLen === 0) {
+		const error = new RangeError(`${ARG_ERROR}, but got no arguments.`);
+
+		error.code = 'ERR_MISSING_ARGS';
+		throw error;
+	}
+
+	if (argLen > 2) {
+		const error = new RangeError(`${ARG_ERROR}, but got ${argLen} arguments.`);
+
+		error.code = 'ERR_TOO_MANY_ARGS';
+		throw error;
 	}
 
 	const [filePath, options] = args;
 
-	if (filePath === '') {
-		throw new TypeError(`${PATH_ERROR}, but got '' (empty string).`);
-	}
+	if (filePath !== undefined && filePath !== null && filePath.length === 0) {
+		let error;
 
-	if (Buffer.isBuffer(filePath) && filePath.length === 0) {
-		throw new TypeError(`${PATH_ERROR}, but got an empty Buffer.`);
+		if (typeof filePath === 'string') {
+			error = new TypeError(`${PATH_ERROR}, but got '' (empty string).`);
+		} else if (Buffer.isBuffer(filePath)) {
+			error = new TypeError(`${PATH_ERROR}, but got an empty Buffer.`);
+		} else {
+			error = new TypeError(`${PATH_ERROR}, but got an empty Uint8Array.`);
+		}
+
+		error.code = 'ERR_INVALID_ARG_VALUE';
+		throw error;
 	}
 
 	if (filePath === 0 || filePath === 1 || filePath === 2) {
-		throw new TypeError(`${FD_ERROR}, but got ${inspectWithKind(filePath)}.`);
+		const error = new TypeError(`${FD_ERROR}, but got ${inspectWithKind(filePath)}.`);
+
+		error.code = 'ERR_INVALID_ARG_VALUE';
+		throw error;
 	}
 
 	if (options) {
 		if (!isPlainObj(options)) {
-			throw new TypeError(`The second argument of read-utf8-file must be a plain object, but got ${
+			const error = new TypeError(`The second argument of read-utf8-file must be a plain object, but got ${
 				inspectWithKind(options)
 			}.`);
+
+			error.code = 'ERR_INVALID_ARG_TYPE';
+			throw error;
 		}
 
 		if ('encoding' in options) {
@@ -51,16 +73,27 @@ module.exports = async function readUtf8File(...args) {
 		const typeOfFlag = typeof options.flag;
 
 		if (options.flag && typeOfFlag !== 'string' && typeOfFlag !== 'number') {
-			throw new TypeError(`${FLAG_ERROR}, but got ${inspect(options.flag)}.`);
-		} else if (options.flag === '') {
-			throw new Error(`${FLAG_ERROR.replace(' (string)', '')}, but got '' (empty string).`);
+			const error = new TypeError(`${FLAG_ERROR}, but got ${inspect(options.flag)}.`);
+
+			error.code = 'ERR_INVALID_OPT_VALUE';
+			throw error;
+		}
+
+		if (options.flag === '') {
+			const error = new Error(`${FLAG_ERROR.replace(' (string)', '')}, but got '' (empty string).`);
+
+			error.code = 'ERR_INVALID_OPT_VALUE';
+			throw error;
 		}
 	}
 
 	const buffer = await promisifiedReadFile(...args);
 
 	if (!isUtf8(buffer)) {
-		throw new Error(`Expected a UTF-8 file, but the file at ${inspect(filePath)} is not UTF-8 encoded.`);
+		const error = new Error(`Expected a UTF-8 file, but the file at ${inspect(filePath)} is not UTF-8 encoded.`);
+
+		error.code = 'ERR_UNSUPPORTED_FILE_ENCODING';
+		throw error;
 	}
 
 	// https://www.unicode.org/faq/utf_bom.html#bom4
