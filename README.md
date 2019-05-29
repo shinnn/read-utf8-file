@@ -31,9 +31,9 @@ const readUtf8File = require('read-utf8-file');
 
 ### readUtf8File(*filePath* [, *options*])
 
-*filePath*: `string | Buffer | Uint8Array | URL` (file path) or `integer` (file descriptor)  
+*filePath*: `string | Buffer | Uint8Array | URL` (file path)  
 *options*: `Object` ([`fs.promises.readFile()`](https://nodejs.org/api/fs.html#fs_fspromises_readfile_path_options) options except for `encoding`)  
-Return: `Promise<string>` (entire file contents except for [BOM](http://unicode.org/faq/utf_bom.html))
+Return: `Promise<string>` (entire file contents except for [BOM](https://unicode.org/faq/utf_bom.html))
 
 ```javascript
 // file-with-bom.txt: '\uFEFFabc'

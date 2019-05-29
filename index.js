@@ -1,17 +1,15 @@
 'use strict';
 
-const {inspect, promisify} = require('util');
-const {readFile} = require('fs');
+const {inspect} = require('util');
+const {open} = require('fs').promises;
 
 const inspectWithKind = require('inspect-with-kind');
 const isPlainObj = require('is-plain-obj');
 const isUtf8 = require('is-utf8');
 
-const ARG_ERROR = 'Expected 1 or 2 arguments (<string|Buffer|Uint8Array|URL|integer>[, <Object>])';
+const ARG_ERROR = 'Expected 1 or 2 arguments (<string|Buffer|Uint8Array|URL>[, <Object>])';
 const PATH_ERROR = 'Expected a valid file path to read its contents, which must includes at least one character';
 const FLAG_ERROR = '`flag` option must be valid file open flags (<string|integer>)';
-const FD_ERROR = 'read-utf8-file doesn\'t support reading from FD 0 (stdin), FD 1 (stdout) nor FD 2 (stderr)';
-const promisifiedReadFile = promisify(readFile);
 
 module.exports = async function readUtf8File(...args) {
 	const argLen = args.length;
@@ -30,7 +28,7 @@ module.exports = async function readUtf8File(...args) {
 		throw error;
 	}
 
-	const [filePath, options] = args;
+	const [filePath, options = {}] = args;
 
 	if (filePath !== undefined && filePath !== null && filePath.length === 0) {
 		let error;
@@ -47,14 +45,7 @@ module.exports = async function readUtf8File(...args) {
 		throw error;
 	}
 
-	if (filePath === 0 || filePath === 1 || filePath === 2) {
-		const error = new TypeError(`${FD_ERROR}, but got ${inspectWithKind(filePath)}.`);
-
-		error.code = 'ERR_INVALID_ARG_VALUE';
-		throw error;
-	}
-
-	if (options) {
+	if (argLen === 2) {
 		if (!isPlainObj(options)) {
 			const error = new TypeError(`The second argument of read-utf8-file must be a plain object, but got ${
 				inspectWithKind(options)
@@ -64,10 +55,13 @@ module.exports = async function readUtf8File(...args) {
 			throw error;
 		}
 
-		if ('encoding' in options) {
-			throw new TypeError(`read-utf8-file does not support \`encoding\` option because it only supports UTF-8 by design, but ${
+		if (Reflect.getOwnPropertyDescriptor(options, 'encoding')) {
+			const error = new TypeError(`read-utf8-file does not support \`encoding\` option because it only supports UTF-8 by design, but ${
 				inspect(options.encoding)
 			} was provided.`);
+
+			error.code = 'ERR_INVALID_OPT_VALUE';
+			throw error;
 		}
 
 		const typeOfFlag = typeof options.flag;
@@ -87,7 +81,9 @@ module.exports = async function readUtf8File(...args) {
 		}
 	}
 
-	const buffer = await promisifiedReadFile(...args);
+	const flag = options.flag || 'r';
+	const fileHandle = await open(filePath, flag);
+	const buffer = await fileHandle.readFile({flag});
 
 	if (!isUtf8(buffer)) {
 		const error = new Error(`Expected a UTF-8 file, but the file at ${inspect(filePath)} is not UTF-8 encoded.`);
