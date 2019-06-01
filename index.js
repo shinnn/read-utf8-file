@@ -1,7 +1,7 @@
 'use strict';
 
 const {inspect} = require('util');
-const {open} = require('fs').promises;
+const {open, realpath} = require('fs').promises;
 
 const inspectWithKind = require('inspect-with-kind');
 const isPlainObj = require('is-plain-obj');
@@ -10,6 +10,21 @@ const isUtf8 = require('is-utf8');
 const ARG_ERROR = 'Expected 1 or 2 arguments (<string|Buffer|Uint8Array|URL>[, <Object>])';
 const PATH_ERROR = 'Expected a valid file path to read its contents, which must includes at least one character';
 const FLAG_ERROR = '`flag` option must be valid file open flags (<string|integer>)';
+
+// When the first 4 bytes are UTF-8, in most cases the entire file contents would be UTF-8.
+const ENOUGH_BYTES = 4;
+
+function validateUtf8(buffer, path) {
+	if (isUtf8(buffer)) {
+		return;
+	}
+
+	const error = new Error(`Expected a UTF-8 file, but the file at ${inspect(path)} is not UTF-8 encoded.`);
+
+	error.code = 'ERR_UNSUPPORTED_FILE_ENCODING';
+	Error.captureStackTrace(error, validateUtf8);
+	throw error;
+}
 
 module.exports = async function readUtf8File(...args) {
 	const argLen = args.length;
@@ -81,21 +96,33 @@ module.exports = async function readUtf8File(...args) {
 		}
 	}
 
+	const buffers = [];
+	const firstBuffer = Buffer.alloc(ENOUGH_BYTES);
 	const flag = options.flag || 'r';
-	const fileHandle = await open(filePath, flag);
-	const buffer = await fileHandle.readFile({flag});
+	const [fileHandle, absolutePath] = await Promise.all([open(filePath, flag), realpath(filePath)]);
+	const {bytesRead} = await fileHandle.read(firstBuffer, 0, ENOUGH_BYTES, null);
+	const allBytesRead = bytesRead < ENOUGH_BYTES;
 
-	if (!isUtf8(buffer)) {
-		const error = new Error(`Expected a UTF-8 file, but the file at ${inspect(filePath)} is not UTF-8 encoded.`);
-
-		error.code = 'ERR_UNSUPPORTED_FILE_ENCODING';
-		throw error;
+	if (allBytesRead) {
+		await fileHandle.close();
 	}
 
-	// https://www.unicode.org/faq/utf_bom.html#bom4
-	if (buffer[0] === 0xEF && buffer[1] === 0xBB && buffer[2] === 0xBF) {
-		return buffer.slice(3).toString();
+	buffers.push(firstBuffer.slice(
+		// https://www.unicode.org/faq/utf_bom.html#bom4
+		firstBuffer[0] === 0xEF && firstBuffer[1] === 0xBB && firstBuffer[2] === 0xBF ? 3 : 0,
+		bytesRead
+	));
+	validateUtf8(buffers[0], absolutePath);
+
+	if (allBytesRead) {
+		return buffers[0].toString();
 	}
 
+	buffers.push(await fileHandle.readFile());
+	await fileHandle.close();
+
+	const buffer = Buffer.concat(buffers, buffers[0].length + buffers[1].length);
+
+	validateUtf8(buffer, absolutePath);
 	return buffer.toString();
 };

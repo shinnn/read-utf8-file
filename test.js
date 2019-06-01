@@ -1,10 +1,9 @@
-/* eslint unicode-bom: [error, always] */
-// NOTE: this file explicitly includes BOM for testing purpose.
 'use strict';
 
 const {equal, rejects} = require('assert').strict;
 const {join} = require('path');
 const {pathToFileURL} = require('url');
+const {unlink, writeFile} = require('fs').promises;
 
 const readUtf8File = require('.');
 const test = require('testit');
@@ -14,17 +13,23 @@ test('read a UTF-8 file', async () => {
 });
 
 test('strip BOM', async () => {
-	equal((await readUtf8File(Buffer.from('test.js'), {})).charAt(0), '/');
+	const path = Buffer.from(join(__dirname, 'fixture-bom'));
+	let result;
+
+	try {
+		await writeFile(path, Buffer.from([0xEF, 0xBB, 0xBF]));
+		result = await readUtf8File(path, {});
+	} finally {
+		await unlink(path);
+	}
+
+	equal(result, '');
 });
 
 test('fail when the file is not UTF-8 encoded', async () => {
-	/* eslint-disable node/no-extraneous-require */
-	const nonUtf8FilePath = require.resolve('istanbul-reports/lib/html/assets/sort-arrow-sprite.png');
-	/* eslint-enable node/no-extraneous-require */
-
-	await rejects(async () => readUtf8File(nonUtf8FilePath), {
+	await rejects(async () => readUtf8File(process.execPath), {
 		code: 'ERR_UNSUPPORTED_FILE_ENCODING',
-		message: `Expected a UTF-8 file, but the file at '${nonUtf8FilePath}' is not UTF-8 encoded.`
+		message: `Expected a UTF-8 file, but the file at '${process.execPath}' is not UTF-8 encoded.`
 	});
 });
 
